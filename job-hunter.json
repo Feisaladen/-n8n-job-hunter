@@ -1,0 +1,479 @@
+{
+  "name": "Job-hunter",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.tavily.com/search",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"api_key\": \"YOUR_TAVILY_API_KEY\",\n  \"query\": \"coding bootcamp OR tech bootcamp hiring instructor OR intern 2026 \\\"apply\\\"\",\n  \"search_depth\": \"advanced\",\n  \"max_results\": 10,\n  \"include_raw_content\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "a62e3c56-5897-4fb6-aad5-1319b17093e9",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        368,
+        -48
+      ],
+      "id": "193f37e2-68bc-480f-b68c-e1b77b8f6e14",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        512,
+        128
+      ],
+      "id": "15853e05-29a7-4e00-8398-6d9b8cd27f9c"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a job hunting assistant.\n\nRead the following page content and determine if there is any job opening, internship, or opportunity available.\n\nPage content:\n{{ $json.content }}\n\nReply with ONLY a valid JSON object like this:\n{\n  \"has_opening\": true or false,\n  \"job_title\": \"title if found or null\",\n  \"apply_email\": \"email if found or null\",\n  \"apply_url\": \"application link if found or null\",\n  \"summary\": \"one sentence about the opportunity\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "410c539b-31bc-49ee-a957-ed18077bcc81",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        704,
+        128
+      ],
+      "id": "7a69ba58-bd9e-4ec3-b705-d708620a0ae8",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "8280ae34-1fb1-4149-a9d0-97861f58ce0d",
+              "leftValue": "={{ $json.has_opening }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "78cc19ba-e812-4b85-831f-71bab7d7deb8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    has_opening: true,\n    job_title: \"Software Developer Intern\",\n    apply_email: \"YOUR_EMAIL\",\n    apply_url: null,\n    summary: \"Internship opportunity at a tech company\"\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        64
+      ],
+      "id": "11f13db7-84e6-48c1-9608-3bf3a8ba6dbc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 1000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        96
+      ],
+      "id": "beebd018-4c19-4dc1-be07-009b16c4392d",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_OPENROUTER_CREDENTIAL_ID",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the job opportunity:\n{{ $json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a job application assistant for [YOUR NAME], a Full-Stack Developer.\n\nHere is the applicant's profile:\n- Skills: [YOUR SKILLS]\n- Experience: [YOUR EXPERIENCE]\n- Projects: [YOUR PROJECTS]\n- Education: [YOUR EDUCATION]\n- Location: [YOUR LOCATION]\n- Email: [YOUR EMAIL]\n- Phone: [YOUR PHONE]\n\nYou will receive a job opportunity. Do three things:\n1. Score the match between the applicant and this job from 0-100\n2. Write a short tailored cover letter (max 150 words) for this specific role\n3. Return the contact email or apply URL if available\n\nReply ONLY with this JSON:\n{\n  \"match_score\": number,\n  \"cover_letter\": \"your cover letter here\",\n  \"apply_to\": \"email or url or null\",\n  \"job_title\": \"title of the job\",\n  \"company\": \"company name\"\n}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1344,
+        -96
+      ],
+      "id": "6b3c8be9-dd40-4834-a2f9-3c4fde09a55b",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "sendTo": "=YOUR_EMAIL",
+        "subject": "=Application for {{ $json.job_title }} – [YOUR NAME]",
+        "message": "={{ $json.cover_letter }}\n\nPlease find my CV here: YOUR_CV_LINK\n\nBest regards,\n[YOUR NAME]\n[YOUR EMAIL]\n[YOUR PHONE]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        -96
+      ],
+      "id": "ec8ba5a3-e567-41ca-a6fc-0bbd8ae9f00b",
+      "name": "Send a message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "job-hunter",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/YOUR_GOOGLE_SHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "column",
+              "displayName": "column",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "value",
+              "displayName": "value",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2112,
+        -96
+      ],
+      "id": "f156a5e2-b520-4a94-8f0e-64d6396950bd",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=New job application sent!\n\n🏢 Company: {{ $json.company ?? 'Unknown' }}\n💼 Role: {{ $json.job_title ?? 'Unknown' }}\n📊 Match Score: {{ $json.match_score ?? 'N/A' }}%\n📧 Applied To: {{ $json.apply_to ?? 'N/A' }}\n\nCheck your Google Sheet for the full cover letter.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2288,
+        -96
+      ],
+      "id": "058b0b98-5653-4d79-a77b-a9adf87f6027",
+      "name": "Send a text message",
+      "webhookId": "YOUR_WEBHOOK_ID",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "218870bf-13c8-4c25-bf94-1df4a10c04a4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nif (input.text) {\n  const cleaned = input.text.replace(/```json|```/g, '').trim();\n  const parsed = JSON.parse(cleaned);\n  return [{ json: parsed }];\n} else {\n  return [{ json: input }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -96
+      ],
+      "id": "dd8f4b77-a57a-49b1-b10f-95c40a85b474",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "6272644a-ad75-4f79-93f8-38cd3eee4a0b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "YOUR_INSTANCE_ID"
+  },
+  "id": "yml0MWimMRQ3r80y",
+  "tags": []
+}
