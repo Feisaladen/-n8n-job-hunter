@@ -115,4 +115,5 @@ AI-JOB-WORKFLOW/
 
 ---
 
-*Built with n8n — automating the job hunt so you can focus on the work.*
+*Built with n8n 
+automating the job hunt so you can focus on the work.*
