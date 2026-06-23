@@ -1,4 +1,4 @@
-# 🤖 AI Job Hunter — n8n Workflow
+# 🤖 AI Job Hunter — n8n Workflow 
 
 > **Version:** v1.0 (Work in Progress — actively being updated)
 
@@ -93,16 +93,7 @@ AI-JOB-WORKFLOW/
 └── README.md           # This file
 ```
 
----
-
 ## 🚧 Roadmap (Upcoming in v2)
-
-- [ ] Add deduplication to avoid applying to the same job twice
-- [ ] Support multiple job search queries
-- [ ] Add a scoring threshold (only apply if match score > 70)
-- [ ] Store cover letters in Google Docs per application
-- [ ] Add WhatsApp notification support
-- [ ] Build a simple dashboard to track application stats
 
 ---
 
